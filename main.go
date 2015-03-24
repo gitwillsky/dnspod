@@ -7,10 +7,10 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"net"
 	"net/http"
 	"net/url"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -99,12 +99,17 @@ var (
 func UpdateRecords(records []RecordUpdateList) error {
 	var ip string
 	// GET ip Value
-	conn, e := net.Dial("tcp", "dnspod.cn:80")
+	resp, e := http.Get("http://1111.ip138.com/ic.asp")
 	if e != nil {
 		return e
 	}
-	defer conn.Close()
-	ip = strings.Split(conn.LocalAddr().String(), ":")[0]
+	defer resp.Body.Close()
+	result, er := ioutil.ReadAll(resp.Body)
+	if er != nil {
+		return er
+	}
+	reg := regexp.MustCompile(`\d+\.\d+\.\d+\.\d+`)
+	ip = reg.FindString(string(result))
 	fmt.Println("New IP address: " + ip)
 	dat := RecordList{}
 
