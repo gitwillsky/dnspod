@@ -3,17 +3,12 @@
 
 ### Usage
 
-command way:
+Command way:
 
     dnspod your_email your_password
     
-config way:
+Config way:
 
     dnspod config
 
-simple config file:
-
-email = 2813013359@qq.com	
-password = xxxxx
-domains = 1
-records = 1,4,5
+Before use config way,you must create a config file like config.conf.
