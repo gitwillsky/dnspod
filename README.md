@@ -11,4 +11,4 @@ Config way:
 
     dnspod config
 
-Before using config way,you must create a config file like config.conf.
+Before using config way,you must create a config file like [ddns.conf](https://coding.net/u/willsky/p/dnspod/git/blob/master/ddns.conf).
