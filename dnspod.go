@@ -99,7 +99,7 @@ var (
 func UpdateRecords(records []RecordUpdateList) error {
 	var ip string
 	// GET ip Value
-	resp, e := http.Get("http://1111.ip138.com/ic.asp")
+	resp, e := http.Get("http://1212.ip138.com/ic.asp")
 	if e != nil {
 		return e
 	}
@@ -272,7 +272,7 @@ label1:
 		return
 	}
 	for _, v := range s {
-		if i, err := strconv.Atoi(v); err != nil {
+		if i, err := strconv.Atoi(strings.TrimSpace(v)); err != nil {
 			fmt.Println("Input Format Error!")
 			goto label1
 		} else {
@@ -316,7 +316,7 @@ label1:
 		fmt.Printf("Select Records(1/1,2,3):")
 		record_num, _ = reader.ReadString('\n')
 	}
-	r := strings.Split(record_num, ",")
+	r := strings.Split(strings.TrimSpace(record_num), ",")
 	// 检查输入
 	if len(r) > i {
 		fmt.Println("input number too huge.")
