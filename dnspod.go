@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -226,7 +227,8 @@ func main() {
 	if len(os.Args) == 2 && strings.TrimSpace(os.Args[1]) == "config" {
 		// 打开配置文件
 		Appconfig := config.New()
-		if err = Appconfig.SetConfig("SlimGoConfig", "ddns.conf"); err != nil {
+		dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
+		if err = Appconfig.SetConfig("SlimGoConfig", dir+"/ddns.conf"); err != nil {
 			panic("Open config file error: " + err.Error())
 		}
 		//  从配置文件读取信息
