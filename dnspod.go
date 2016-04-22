@@ -15,30 +15,30 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gitwillsky/slimgo_com/config"
+	"github.com/gitwillsky/slimgo/config"
 )
 
-// 域名列表
+// DomainList域名列表
 type DomainsList struct {
 	RStatus  Status     `json:"status"`
 	RInfo    DomainInfo `json:"info"`
 	RDomains []Domains  `json:"domains"`
 }
 
-// 返回状态信息
+// Status 返回状态信息
 type Status struct {
-	Code       string `json:"code"`
-	Message    string `json:"message"`
-	Created_at string `json:"created_at"`
+	Code      string `json:"code"`
+	Message   string `json:"message"`
+	CreatedAt string `json:"created_at"`
 }
 
-// 域名信息
+// DomainInfo 域名信息
 type DomainInfo struct {
 	TotalDomain int `json:"domain_total"`
 	AllTotal    int `json:"all_total"`
 }
 
-// 域名字段
+// Domains 域名字段
 type Domains struct {
 	ID      int    `json:"id"`
 	Status  string `json:"status"`
@@ -48,7 +48,7 @@ type Domains struct {
 	Records string `json:"records"`
 }
 
-// 记录列表
+// RecordList 记录列表
 type RecordList struct {
 	Records     []Record     `json:"records"`
 	RStatus     Status       `json:"status"`
@@ -56,19 +56,19 @@ type RecordList struct {
 	Domain      RecordDomain `json:"domain"`
 }
 
-// 记录信息
+// RecordInfo 记录信息
 type RecordInfo struct {
 	SubDomains  string `json:"sub_domains"`
 	RecordTotal string `json:"record_total"`
 }
 
-// 记录域名信息
+// RecordDomain 记录域名信息
 type RecordDomain struct {
-	Id   int    `json:"id"`
+	ID   int    `json:"id"`
 	Name string `json:"name"`
 }
 
-// 记录字段
+// Record 记录字段
 type Record struct {
 	ID     string `json:"id"`
 	Name   string `json:"name"`
@@ -80,7 +80,7 @@ type Record struct {
 	Mx     string `json:"mx"`
 }
 
-// 更新的RecordList
+// RecordUpdateList 更新的RecordList
 type RecordUpdateList struct {
 	DomainID   int
 	RecordID   string
@@ -88,6 +88,7 @@ type RecordUpdateList struct {
 	RecordLine string
 	RecordMX   string
 	SubDomain  string
+	OldValue   string
 }
 
 // 用户相关信息
@@ -96,11 +97,11 @@ var (
 	password string // 密码
 )
 
-// 更新记录
+// UpdateRecords 更新域名记录
 func UpdateRecords(records []RecordUpdateList) error {
 	var ip string
 	// GET ip Value
-	resp, e := http.Get("http://1212.ip138.com/ic.asp")
+	resp, e := http.Get("http://ip.3322.org/")
 	if e != nil {
 		return e
 	}
@@ -133,13 +134,14 @@ func UpdateRecords(records []RecordUpdateList) error {
 		}
 
 		// 读取返回字节流并解析
-		if tempData, e := ioutil.ReadAll(resp.Body); e != nil {
+		tempData, e := ioutil.ReadAll(resp.Body)
+		if e != nil {
 			return e
-		} else {
-			// 解析JSON
-			if err = json.Unmarshal(tempData, &dat); err != nil {
-				return err
-			}
+		}
+
+		// 解析JSON
+		if err = json.Unmarshal(tempData, &dat); err != nil {
+			return err
 		}
 
 		fmt.Println(dat.RStatus.Message)
@@ -148,37 +150,38 @@ func UpdateRecords(records []RecordUpdateList) error {
 	return nil
 }
 
-// 获取记录列表
-func GetRecordList(client_ids []int) ([]RecordList, error) {
-	var dat = make([]RecordList, len(client_ids))
+// GetRecordList 获取记录列表
+func GetRecordList(clientIds []int) ([]RecordList, error) {
+	var dat = make([]RecordList, len(clientIds))
 
 	fmt.Println("Request domain record list...")
-	for i := 0; i < len(client_ids); i++ {
+	for i := 0; i < len(clientIds); i++ {
 		resp, err := getClient().PostForm("https://dnsapi.cn/Record.List", url.Values{
 			"login_email":    {email},
 			"login_password": {password},
 			"format":         {"json"},
-			"domain_id":      {strconv.Itoa(client_ids[i])},
+			"domain_id":      {strconv.Itoa(clientIds[i])},
 		})
 		if err != nil {
 			return nil, err
 		}
 
 		// 读取返回字节流并解析
-		if tempData, e := ioutil.ReadAll(resp.Body); e != nil {
+		tempData, e := ioutil.ReadAll(resp.Body)
+		if e != nil {
 			return nil, e
-		} else {
-			// 解析JSON
-			if err = json.Unmarshal(tempData, &dat[i]); err != nil {
-				return nil, err
-			}
+		}
+
+		// 解析JSON
+		if err = json.Unmarshal(tempData, &dat[i]); err != nil {
+			return nil, err
 		}
 	}
 
 	return dat, nil
 }
 
-// 获取域名列表
+// GetDomainList 获取域名列表
 func GetDomainList() (*DomainsList, error) {
 	var dat = &DomainsList{}
 
@@ -195,13 +198,13 @@ func GetDomainList() (*DomainsList, error) {
 	}
 
 	// 读取返回字节流并解析
-	if tempData, e := ioutil.ReadAll(resp.Body); e != nil {
+	tempData, e := ioutil.ReadAll(resp.Body)
+	if e != nil {
 		return nil, e
-	} else {
-		// 解析JSON
-		if err = json.Unmarshal(tempData, &dat); err != nil {
-			return nil, err
-		}
+	}
+	// 解析JSON
+	if err = json.Unmarshal(tempData, &dat); err != nil {
+		return nil, err
 	}
 
 	// 判断用户是否登录成功
@@ -210,130 +213,6 @@ func GetDomainList() (*DomainsList, error) {
 	}
 
 	return dat, nil
-}
-
-func main() {
-	var (
-		reader                 = bufio.NewReader(os.Stdin)
-		selectDomains          = make([]int, 0)
-		domainList             *DomainsList
-		recordList             []RecordList
-		err                    error
-		i                      = 0
-		tempList               = make([]RecordUpdateList, 0)
-		updateList             = make([]RecordUpdateList, 0)
-		domain_num, record_num string
-	)
-	if len(os.Args) == 2 && strings.TrimSpace(os.Args[1]) == "config" {
-		// 打开配置文件
-		Appconfig := config.New()
-		dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
-		if err = Appconfig.SetConfig("SlimGoConfig", dir+"/ddns.conf"); err != nil {
-			panic("Open config file error: " + err.Error())
-		}
-		//  从配置文件读取信息
-		email = Appconfig.GetString("email")
-		password = Appconfig.GetString("password")
-		domain_num = Appconfig.GetString("domains")
-		record_num = Appconfig.GetString("records")
-	} else {
-
-		if len(os.Args) == 3 {
-			email = strings.TrimSpace(os.Args[1])
-			password = strings.TrimSpace(os.Args[2])
-		} else {
-			fmt.Println("Input Params wrong!")
-			return
-		}
-	}
-
-	// 获取域名列表
-	if domainList, err = GetDomainList(); err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-
-	// 显示部分域名列表信息
-	fmt.Println("Result: " + domainList.RStatus.Message)
-	fmt.Println("Total Domains: " + strconv.Itoa(domainList.RInfo.TotalDomain))
-	fmt.Println("Domain ID              Domain Name")
-	for _, val := range domainList.RDomains {
-		fmt.Println(strconv.Itoa(val.ID) + "              " + val.Name)
-	}
-
-	// 选择要修改的域名
-label1:
-	if len(domain_num) == 0 {
-		fmt.Printf("Select Domain:(1/1,2,3)?:")
-		domain_num, _ = reader.ReadString('\n')
-	}
-	s := strings.Split(domain_num, ",")
-	// 检查输入
-	if len(s) > len(domainList.RDomains) {
-		fmt.Println("input number too huge.")
-		return
-	}
-	for _, v := range s {
-		if i, err := strconv.Atoi(strings.TrimSpace(v)); err != nil {
-			fmt.Println("Input Format Error!")
-			goto label1
-		} else {
-			selectDomains = append(selectDomains, domainList.RDomains[i-1].ID)
-		}
-	}
-
-	// 获取选择域名的记录信息
-	if recordList, err = GetRecordList(selectDomains); err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-
-	// 显示域名记录信息
-	fmt.Println("DomainID		RecordID		Record		Type		Value		TTL")
-	for _, val := range recordList {
-		for _, v := range val.Records {
-			fmt.Printf("%d		%s		%s		%s		%s		%s\n",
-				val.Domain.Id,
-				v.ID,
-				v.Name,
-				v.Type,
-				strings.TrimSpace(v.Value),
-				v.TTL)
-
-			record := RecordUpdateList{
-				DomainID:   val.Domain.Id,
-				RecordID:   v.ID,
-				RecordType: v.Type,
-				RecordLine: v.Line,
-				RecordMX:   v.Mx,
-				SubDomain:  v.Name,
-			}
-			tempList = append(tempList, record)
-			i++
-		}
-	}
-
-	// 选择要修改的记录
-	if len(record_num) == 0 {
-		fmt.Printf("Select Records(1/1,2,3):")
-		record_num, _ = reader.ReadString('\n')
-	}
-	r := strings.Split(strings.TrimSpace(record_num), ",")
-	// 检查输入
-	if len(r) > i {
-		fmt.Println("input number too huge.")
-		return
-	}
-
-	for _, v := range r {
-		num, _ := strconv.Atoi(v)
-		updateList = append(updateList, tempList[num-1])
-	}
-
-	// update
-	if err = UpdateRecords(updateList); err != nil {
-		fmt.Println(err.Error())
-	}
 }
 
 // new https client
@@ -346,4 +225,198 @@ func getClient() *http.Client {
 	client := &http.Client{Transport: tr}
 
 	return client
+}
+
+func main() {
+	var (
+		reader               = bufio.NewReader(os.Stdin)
+		selectDomains        = make([]int, 0)
+		domainList           *DomainsList
+		recordList           []RecordList
+		err                  error
+		i                    = 0
+		tempList             = make([]RecordUpdateList, 0)
+		updateList           = make([]RecordUpdateList, 0)
+		domainNum, recordNum string
+		useConfig            bool
+	)
+
+	switch len(os.Args) {
+	case 2:
+		// use config
+		if strings.TrimSpace(os.Args[1]) == "config" {
+			// 打开配置文件
+			Appconfig := config.New()
+			dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
+			if err = Appconfig.SetConfig("SlimGoConfig", dir+"/ddns.conf"); err != nil {
+				panic("Open config file error: " + err.Error())
+			}
+			//  从配置文件读取信息
+			email = Appconfig.GetString("email")
+			password = Appconfig.GetString("password")
+			domainNum = Appconfig.GetString("domains")
+			recordNum = Appconfig.GetString("records")
+			useConfig = true
+		} else {
+			fmt.Println("Input params wrong")
+			return
+		}
+	case 3:
+		// use command
+		email = strings.TrimSpace(os.Args[1])
+		password = strings.TrimSpace(os.Args[2])
+		useConfig = false
+	default:
+		fmt.Println("Input params wrong")
+		return
+	}
+
+	// 获取域名列表
+	if domainList, err = GetDomainList(); err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
+	if !useConfig {
+		// 显示部分域名列表信息
+		fmt.Println("Result: " + domainList.RStatus.Message)
+		fmt.Println("Total Domains: " + strconv.Itoa(domainList.RInfo.TotalDomain))
+		fmt.Println("Domain ID              Domain Name")
+		for _, val := range domainList.RDomains {
+			fmt.Println(strconv.Itoa(val.ID) + "              " + val.Name)
+		}
+
+		// 选择域名
+		for {
+			fmt.Printf("Select Domain:(1 / 1,2,3)?:")
+			domainNum, _ = reader.ReadString('\n')
+			if domainNum == "" {
+				continue
+			}
+
+			s := strings.Split(domainNum, ",")
+			if len(s) > len(domainList.RDomains) {
+				fmt.Println("Too many domain number")
+				continue
+			}
+
+			for _, v := range s {
+				id, e := strconv.Atoi(strings.TrimSpace(v))
+				if e != nil {
+					fmt.Println("Domain number Format wrong, must be number")
+					continue
+				}
+				selectDomains = append(selectDomains, domainList.RDomains[id-1].ID)
+			}
+
+			break
+		}
+	}
+
+	if useConfig {
+		if domainNum == "" {
+			fmt.Println("Please check config domains value")
+			return
+		}
+		s := strings.Split(domainNum, ",")
+		if len(s) > len(domainList.RDomains) {
+			fmt.Println("Too many domain number")
+			return
+		}
+
+		for _, v := range s {
+			id, e := strconv.Atoi(strings.TrimSpace(v))
+			if e != nil {
+				fmt.Println("Domain number Format wrong, must be number")
+				return
+			}
+			selectDomains = append(selectDomains, domainList.RDomains[id-1].ID)
+		}
+	}
+
+	// 获取选择域名的记录信息
+	if recordList, err = GetRecordList(selectDomains); err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	for _, val := range recordList {
+		for _, v := range val.Records {
+			record := RecordUpdateList{
+				DomainID:   val.Domain.ID,
+				RecordID:   v.ID,
+				RecordType: v.Type,
+				RecordLine: v.Line,
+				RecordMX:   v.Mx,
+				SubDomain:  v.Name,
+				OldValue:   v.Value,
+			}
+			tempList = append(tempList, record)
+			i++
+		}
+	}
+
+	if !useConfig {
+		// 显示域名记录信息
+		fmt.Println("DomainID		RecordID		Record		Type		Line		Value")
+		for _, v := range tempList {
+			fmt.Printf("%d		%s		%s		%s		%s		%s\n",
+				v.DomainID,
+				v.RecordID,
+				v.SubDomain,
+				v.RecordType,
+				v.RecordLine,
+				v.OldValue,
+			)
+		}
+
+		// 选择域名纪录
+		for {
+			fmt.Printf("Select Records(1/1,2,3):")
+			recordNum, _ = reader.ReadString('\n')
+			if recordNum == "" {
+				continue
+			}
+			r := strings.Split(recordNum, ",")
+			if len(r) > i {
+				fmt.Println("Too many record numbers")
+				continue
+			}
+			for _, v := range r {
+				num, e := strconv.Atoi(strings.TrimSpace(v))
+				if e != nil {
+					fmt.Println("Records must be number format")
+					continue
+				}
+				updateList = append(updateList, tempList[num-1])
+			}
+			break
+		}
+	}
+
+	if useConfig {
+		if recordNum == "" {
+			fmt.Println("Please check your config records value")
+			return
+		}
+
+		r := strings.Split(recordNum, ",")
+		if len(r) > i {
+			fmt.Println("Too many record numbers")
+			return
+		}
+
+		for _, v := range r {
+			num, e := strconv.Atoi(strings.TrimSpace(v))
+			if e != nil {
+				fmt.Println("Records must be number format")
+				continue
+			}
+			updateList = append(updateList, tempList[num-1])
+		}
+	}
+
+	// update
+	if err = UpdateRecords(updateList); err != nil {
+		fmt.Println(err.Error())
+	}
 }
