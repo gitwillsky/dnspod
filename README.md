@@ -20,7 +20,7 @@ domains = 1,2,3          # your domain sequence number in dnspod.cn domain list
 records = 5,6,7          # your record sequence number in dnspod.cn domain's record list
 ```
 
-### Find bug
+### Found bug
 
 Use Pull－Request.
 
